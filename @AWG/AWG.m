@@ -25,12 +25,6 @@ classdef AWG < handle & matlab.mixin.Heterogeneous
         
     end
     
-    properties (GetAccess = public, SetAccess = ?VAWG)
-        %virtual channel assigned to each hardware channel.
-        %0 means no virtual channel assigned to the channel
-        virtualChannels;
-    end
-    
     % hardware specific methods
     methods (Abstract)
         %make this pulsegroup playable by AWG
@@ -68,25 +62,9 @@ classdef AWG < handle & matlab.mixin.Heterogeneous
         function obj = AWG(id)
             obj.identifier = id;
             
-            obj.virtualChannels = zeros(1,obj.nChannels);
-            
             obj.offset = zeros(1,obj.nChannels);
             obj.scale = ones(1,obj.nChannels);
             obj.resolution = obj.possibleResolutions(1);
-        end
-        
-        function virtChan = getVirtualChannel(self,chan)
-            virtChan = self.virtualChannels(chan);
-            if virtChan == 0
-                virtChan = [];
-            end
-        end
-        
-        function hardwareChannels = getHardwareChannel(self,virtualChannel)
-            if ~isscalar(virtualChannel)
-                error('Can not convert multiple virt channels at once, since one may refer to multiple harware channels.');
-            end
-            hardwareChannels = find( self.virtualChannels == virtualChannel );
         end
         
         function setActivePulseGroup(self,pulsegroupName)

@@ -3,6 +3,9 @@ classdef VAWG < handle
         awgs;
         
         %channel mapping
+        % a cell array of arrays of 2 dimensional entries
+        % [awgIndex hardwareChannel]
+        % ex: [awgId hwdChnl] = virtualToHardware{0}{1}
         virtualToHardware = {};
         
         %trigger length in nanoseconds
@@ -34,23 +37,20 @@ classdef VAWG < handle
             end
         end
         
-        function removeAWG(self,awg)
-            index = self.getIndex(awg);
+        function removeAWG(self, awg)
+            awgIndex = self.getIndex(awg);
             
-            self.awgs(index).virtualChannels = [];
-            
-            for virt = 1:length(self.virtualToHardware)
+            for virtualChannel = 1:length(self.virtualToHardware)
                 todelete = [];
-                for entry = 1:length( self.virtualToHardware{virt} )
-                    if self.virtualToHardware{virt}{entry}(1) == index
+                for entry = 1:length( self.virtualToHardware{virtualChannel} )
+                    if self.virtualToHardware{virtualChannel}{entry}(1) == awgIndex
                         todelete(end+1) = entry;
                     end
                 end
-                self.virtualToHardware{virt}(todelete) = [];
+                self.virtualToHardware{virtualChannel}(todelete) = [];
             end
             
-            
-            self.awgs(index) = [];
+            self.awgs(awgIndex) = [];
         end
         
         function index = getIndex(self,awg)
@@ -69,48 +69,37 @@ classdef VAWG < handle
             end
         end
         
-        function createVirtualChannel(self,awg,hardware,virtual)
-            index = self.getIndex(awg);
+        function createVirtualChannel(self, awg, hardwareChannel, virtualChannel)
+            awgIndex = self.getIndex(awg);
             
-            if hardware> self.awgs(index).nChannels
-                error('AWG %s only has %i hardware channels. Requested was %i',self.awgs(index).nChannels,hardware);
+            awg = self.awgs(awgIndex);
+            
+            if hardwareChannel > awg.nChannels
+                error('AWG %s only has %i hardware channels. Requested was %i', awg.identifier, awg.nChannels, hardwareChannel);
             end
             
-            if size(self.virtualToHardware,2) < virtual
-                self.virtualToHardware{virtual}{1} = [index hardware];
+            if size(self.virtualToHardware,2) < virtualChannel
+                self.virtualToHardware{virtualChannel}{1} = [awgIndex hardwareChannel];
             else
-                self.virtualToHardware{virtual}{end+1} = [index hardware];
+                self.virtualToHardware{virtualChannel}{end+1} = [awgIndex hardwareChannel];
             end
-            
-            self.awgs(index).virtualChannels(hardware) = virtual;
         end
         
-        function removeVirtualChannel(self,virtualChannel)
-            if size(self.virtualToHardWare,2)<virtualChannel || isempty(self.virtualToHardWare{virtualChannel})
+        function removeVirtualChannel(self, virtualChannel)
+            if size(self.virtualToHardware,2) < virtualChannel || isempty(self.virtualToHardware{virtualChannel})
                 return;
             end
-            
-            for indexhardware = self.awgs{virtualChannel}
-                index = indexhardware(1);
-                hardware = indexhardware(2);
-                
-                self.awgs(index).virtualChannels(hardware) = 0;
-            end
-            self.virtualToHardWare{virtualChannel} = [];
+            self.virtualToHardware{virtualChannel} = {};
         end
         
-        function removeVirtualChannelMapping(self,virtualChannel,awg,hardware)
-            index = getIndex(awg);
-            if size(self.virtualToHardWare,2)<virtualChannel || isempty(self.virtualToHardWare{virtualChannel})
+        function removeVirtualChannelMapping(self, awg, hardwareChannel, virtualChannel)
+            awgIndex = getIndex(awg);
+            if size(self.virtualToHardware,2) < virtualChannel || isempty(self.virtualToHardware{virtualChannel})
                 return;
             end
-            
-            entry = find(self.virtualToHardWare{virtualChannel} == [index hardware]);
-            if isempty(entry)
-                return;
-            end
-            self.awgs(index).virtualChannels(hardware) = 0;
-            self.virtualToHardWare{virtualChannel}{entry} = [];
+
+            self.virtualToHardware{virtualChannel} = ...
+                self.removeFromCellArray(self.virtualToHardware{virtualChannel}, [awgIndex hardwareChannel]);
         end
         
         function setActivePulseGroup(self,groupName)
@@ -144,5 +133,23 @@ classdef VAWG < handle
         function triglen = getTriggerLength(self)
             triglen = self.triggerLength;
         end
+    end
+    
+    methods (Static)
+        
+        function newArray = removeFromCellArray(array, value)
+            newArray = array;
+            
+            todelete = [];
+            for i = 1:size(newArray, 2);
+                compare = array{i} == value;
+                if (sum(compare==0) == 0)
+                    todelete(end + 1) = i;
+                end
+            end
+            
+            newArray(todelete) = [];
+        end
+        
     end
 end
