@@ -1,12 +1,13 @@
 classdef RawIOTestConfigurationProvider < TestConfigurationProvider
     
-    properties (GetAccess = protected)
+    properties (SetAccess = protected, GetAccess = protected)
         mask = struct( ...
             'begin',    0, ...
-            'end',      10000, ...
-            'period',   10000 ...
+            'end',      8192, ...
+            'period',   8192, ...
+            'type',     'Periodic Mask' ...
         );
-    iterations = 1;
+        iterations = 2;
     end
     
     methods (Access = protected)
@@ -32,6 +33,7 @@ classdef RawIOTestConfigurationProvider < TestConfigurationProvider
                 assert(isnumeric(iterations) && iterations > 0, 'iterations must be a positive integer value!');
                 self.iterations = iterations;
             end
+            self.mask.hwChannel = inputChannel;
         end
     end
     

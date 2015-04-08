@@ -1,10 +1,12 @@
 classdef PeriodicMaskTestConfigurationProvider < TestConfigurationProvider
     
-    properties (GetAccess = protected)
+    properties (SetAccess = protected, GetAccess = protected)
+        % TODO: does period always need to be a potency of 2?
         mask = struct( ...
             'begin',    400, ...
             'end',      600, ...
-            'period',   1000 ...
+            'period',   1000,...
+            'type',     'Periodic Mask' ...
         );
         iterations = 100;
     end
@@ -31,6 +33,7 @@ classdef PeriodicMaskTestConfigurationProvider < TestConfigurationProvider
                 assert(isnumeric(iterations) && iterations > 0, 'iterations must be a positive integer value!');
                 self.iterations = iterations;
             end
+            self.mask.hwChannel = inputChannel;
         end
         
     end
