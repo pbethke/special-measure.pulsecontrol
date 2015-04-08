@@ -1,4 +1,10 @@
 classdef RawIOTestConfigurationProvider < TestConfigurationProvider
+    % RawIOTestConfigurationProvider Provides a mask for raw IO input
+    % testing.
+    %
+    % The default mask has a period of 10000 and an equally long readout
+    % window. It can be changed via the constructor (optional).
+    
     
     properties (SetAccess = protected, GetAccess = protected)
         mask = struct( ...
